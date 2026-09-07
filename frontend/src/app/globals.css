@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+:root {
+  /* SaaS Dark Palette & Tokens */
+  --background: #100730;
+  --surface: #140a38;
+  --surface-elevated: #190e46;
+  --surface-card: #160c3d;
+  --surface-muted: #1c104d;
+  --sidebar: #0d0526;
+  --sidebar-hover: #180e42;
+  --sidebar-active: #5925DC;
+  --primary: #5925DC;
+  --primary-hover: #6b35e8;
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --border: #251357;
+  --border-subtle: rgba(122, 91, 248, 0.15);
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: #5925dc;
+  color: #ffffff;
+}
+
+/* Custom modern scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2b1764;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3e218c;
+}
+
+/* Smooth input focus outlines */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+}
+

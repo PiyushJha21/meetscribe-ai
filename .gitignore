@@ -1,0 +1,64 @@
+# Dependencies
+node_modules/
+**/node_modules/
+.pnp
+.pnp.js
+
+# Python Virtual Environments & Caches
+venv/
+.venv/
+backend/venv/
+**/venv/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# Next.js & Frontend Builds
+.next/
+**/.next/
+out/
+.vercel/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment Variables & Secrets (Keep .example files)
+.env
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+**/.env
+**/.env.local
+**/.env.*.local
+!**/.env.example
+!**/.env.local.example
+
+# Databases & SQLite
+*.db
+*.sqlite
+*.sqlite3
+backend/meetscribe.db
+
+# Audio Uploads & Media Files
+backend/uploads/*
+!backend/uploads/.gitkeep
+uploads/
+*.mp3
+*.wav
+*.m4a
+*.webm
+*.ogg
+
+# OS & IDE Metadata
+.DS_Store
+**/.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.pem
