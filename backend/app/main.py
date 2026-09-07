@@ -2,15 +2,26 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database import Base, engine
+from app.database import Base, SessionLocal, engine
 import app.models  # Ensures all SQLAlchemy models are registered
-from app.routers import action_items_router, meetings_router
+from app.routers import action_items_router, meetings_router, users_router
+from app.seed import seed_default_users
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Ensure all database tables exist on application startup
     Base.metadata.create_all(bind=engine)
+
+    # Ensure default workspace users exist
+    db = SessionLocal()
+    try:
+        seed_default_users(db)
+    except Exception as e:
+        print(f"Warning: Startup user seeding error: {e}")
+    finally:
+        db.close()
+
     yield
 
 
@@ -34,6 +45,7 @@ app.add_middleware(
 )
 
 # Register API Routers under /api
+app.include_router(users_router, prefix="/api")
 app.include_router(meetings_router, prefix="/api")
 app.include_router(action_items_router, prefix="/api")
 

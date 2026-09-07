@@ -4,10 +4,15 @@ Populates realistic workspace owner, meetings, participants, transcripts,
 summaries, key topics, and action items with idempotent execution.
 """
 
+import os
+import sys
 from datetime import datetime
 from typing import Any, Dict, List
-from sqlalchemy.orm import Session
 
+# Ensure backend directory is in python search path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from sqlalchemy.orm import Session
 from app.database import Base, SessionLocal, engine
 from app.models import (
     ActionItem,
@@ -20,12 +25,35 @@ from app.models import (
 )
 
 # Seed Data Definition
-SEED_USER = {
-    "display_id": "USR-IND-001",
-    "name": "Piyush Kumar Jha",
-    "email": "piyush.jha@syncspace.in",
-    "avatar_url": "https://api.dicebear.com/7.x/avataaars/svg?seed=Piyush",
-}
+SEED_USERS = [
+    {
+        "display_id": "USR-IND-001",
+        "name": "Piyush Kumar Jha",
+        "email": "piyush.jha@syncspace.in",
+        "avatar_url": "https://api.dicebear.com/7.x/avataaars/svg?seed=Piyush",
+    },
+    {
+        "display_id": "USR-IND-002",
+        "name": "Anshu Kumar",
+        "email": "anshu.kumar@syncspace.in",
+        "avatar_url": "https://api.dicebear.com/7.x/avataaars/svg?seed=Anshu",
+    },
+    {
+        "display_id": "USR-IND-003",
+        "name": "Rahul Verma",
+        "email": "rahul.verma@syncspace.in",
+        "avatar_url": "https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul",
+    },
+    {
+        "display_id": "USR-IND-004",
+        "name": "Priya Singh",
+        "email": "priya.singh@syncspace.in",
+        "avatar_url": "https://api.dicebear.com/7.x/avataaars/svg?seed=Priya",
+    },
+]
+
+# Legacy alias for backward compatibility
+SEED_USER = SEED_USERS[0]
 
 SEED_MEETINGS: List[Dict[str, Any]] = [
     # 1. Engineering Sprint Planning
@@ -413,37 +441,53 @@ SEED_MEETINGS: List[Dict[str, Any]] = [
 ]
 
 
+def seed_default_users(db: Session) -> List[User]:
+    """
+    Idempotently seed default workspace users.
+    Ensures Piyush Kumar Jha (owner) and Anshu Kumar exist.
+    """
+    seeded_users = []
+    for user_data in SEED_USERS:
+        existing = db.query(User).filter(
+            (User.email == user_data["email"]) | (User.display_id == user_data["display_id"])
+        ).first()
+
+        if not existing:
+            user = User(
+                display_id=user_data["display_id"],
+                name=user_data["name"],
+                email=user_data["email"],
+                avatar_url=user_data["avatar_url"],
+                created_at=datetime(2026, 8, 1, 9, 0, 0),
+            )
+            db.add(user)
+            db.flush()
+            seeded_users.append(user)
+            print(f"✓ Created sample user (ID={user.id}): {user.name} ({user.email})")
+        else:
+            seeded_users.append(existing)
+            print(f"ℹ Sample user already exists (ID={existing.id}): {existing.name} ({existing.email})")
+
+    db.commit()
+    return seeded_users
+
+
 def seed_database(db: Session) -> Dict[str, Any]:
     """
     Idempotent database seeder.
-    Creates the owner user and 8 realistic meetings with participants,
+    Creates default users and realistic meetings with participants,
     transcripts, summaries, topics, and action items.
     """
     results: Dict[str, Any] = {
-        "user_created": False,
+        "users_seeded": 0,
         "meetings_created": 0,
         "meetings_skipped": 0,
     }
 
-    # 1. Idempotently get or create workspace owner user
-    owner = db.query(User).filter(
-        (User.email == SEED_USER["email"]) | (User.display_id == SEED_USER["display_id"])
-    ).first()
-
-    if not owner:
-        owner = User(
-            display_id=SEED_USER["display_id"],
-            name=SEED_USER["name"],
-            email=SEED_USER["email"],
-            avatar_url=SEED_USER["avatar_url"],
-            created_at=datetime(2026, 8, 1, 9, 0, 0),
-        )
-        db.add(owner)
-        db.flush()  # Obtain owner.id for meetings
-        results["user_created"] = True
-        print(f"✓ Created workspace owner: {owner.name} ({owner.display_id})")
-    else:
-        print(f"ℹ Workspace owner already exists: {owner.name} ({owner.display_id})")
+    # 1. Idempotently seed default users
+    users = seed_default_users(db)
+    owner = users[0]
+    results["users_seeded"] = len(users)
 
     # 2. Idempotently seed each meeting
     for mtg_data in SEED_MEETINGS:
