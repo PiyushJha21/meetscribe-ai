@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from pathlib import Path
 import shutil
@@ -38,8 +39,17 @@ from app.services import (
 
 router = APIRouter(prefix="/meetings", tags=["Meetings"])
 
-# Upload directory configuration
-UPLOAD_DIR = BASE_DIR / "uploads" / "audio"
+# Upload directory configuration (supports persistent volume mounts on Railway)
+upload_env = os.getenv("UPLOAD_DIR", "").strip()
+if upload_env:
+    UPLOAD_DIR = Path(upload_env)
+else:
+    sqlite_env = os.getenv("SQLITE_DB_PATH", "").strip() or os.getenv("DB_PATH", "").strip()
+    if sqlite_env and Path(sqlite_env).parent != BASE_DIR:
+        UPLOAD_DIR = Path(sqlite_env).parent / "uploads" / "audio"
+    else:
+        UPLOAD_DIR = BASE_DIR / "uploads" / "audio"
+
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 ALLOWED_AUDIO_TYPES = {
