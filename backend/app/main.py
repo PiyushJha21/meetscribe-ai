@@ -1,11 +1,12 @@
 from contextlib import asynccontextmanager
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, SessionLocal, engine
 import app.models  # Ensures all SQLAlchemy models are registered
 from app.routers import action_items_router, meetings_router, users_router
-from app.seed import seed_default_users
+from app.seed import seed_database, seed_default_users
 
 
 @asynccontextmanager
@@ -13,12 +14,19 @@ async def lifespan(app: FastAPI):
     # Ensure all database tables exist on application startup
     Base.metadata.create_all(bind=engine)
 
-    # Ensure default workspace users exist
+    # Ensure default workspace users exist and auto-seed if fresh database
     db = SessionLocal()
     try:
+        from app.models import Meeting
         seed_default_users(db)
+
+        # If database has zero meetings, automatically seed sample workspace meetings
+        auto_seed = os.getenv("AUTO_SEED", "true").lower() in ("true", "1", "yes")
+        if auto_seed and db.query(Meeting).count() == 0:
+            print("Fresh database detected. Automatically seeding sample meetings and transcripts...")
+            seed_database(db)
     except Exception as e:
-        print(f"Warning: Startup user seeding error: {e}")
+        print(f"Warning: Startup database initialization error: {e}")
     finally:
         db.close()
 
@@ -32,9 +40,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-import os
-
-# Configure CORS for Next.js frontend communication
+# Configure CORS for Next.js frontend communication (local, Vercel, and custom domains)
 allowed_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
