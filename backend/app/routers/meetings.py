@@ -30,6 +30,7 @@ from app.schemas import (
 )
 from app.services import (
     ParsedSegment,
+    generate_and_save_meeting_intelligence,
     parse_json_transcript,
     parse_plain_text,
     parse_vtt,
@@ -446,6 +447,12 @@ def _process_and_save_transcript(
 
     db.commit()
 
+    # Automatically generate/update AI Executive Summary, Key Topics & Action Items
+    try:
+        generate_and_save_meeting_intelligence(meeting_id, db)
+    except Exception as e:
+        print(f"Warning: Auto-intelligence generation failed: {e}")
+
     # 4. Fetch stored segments
     stored_segments = (
         db.query(TranscriptSegment)
@@ -669,3 +676,26 @@ def get_meeting_action_items(
         .all()
     )
     return action_items
+
+
+@router.post("/{meeting_id}/generate-summary", response_model=MeetingDetailResponse)
+@router.post("/{meeting_id}/ai-insights", response_model=MeetingDetailResponse)
+def generate_meeting_ai_insights(
+    meeting_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Analyze all transcript segments for the meeting, and generate/save:
+    1. AI Executive Summary (MeetingSummary)
+    2. Key Discussion Topics (KeyTopic)
+    3. Action Items (ActionItem)
+    """
+    try:
+        generate_and_save_meeting_intelligence(meeting_id, db)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+    return get_meeting(meeting_id, db)
+

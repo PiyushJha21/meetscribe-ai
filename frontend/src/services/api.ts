@@ -302,3 +302,14 @@ export async function getUser(userId: number): Promise<User> {
   return apiRequest<User>(`/api/users/${userId}`);
 }
 
+/**
+ * Trigger AI transcript analysis to generate Executive Summary, Key Topics, and Action Items.
+ * POST /api/meetings/{id}/generate-summary
+ */
+export async function generateMeetingAiInsights(meetingId: number): Promise<MeetingDetail> {
+  return apiRequest<MeetingDetail>(`/api/meetings/${meetingId}/generate-summary`, {
+    method: "POST",
+  });
+}
+
+

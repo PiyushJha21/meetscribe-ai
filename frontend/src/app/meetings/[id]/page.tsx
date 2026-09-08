@@ -255,6 +255,7 @@ export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
             summary={meeting.summary}
             keyTopics={meeting.key_topics}
             actionItems={meeting.action_items}
+            onAiGenerated={loadMeetingWorkspace}
           />
         </div>
       </div>
