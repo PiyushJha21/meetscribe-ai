@@ -89,14 +89,32 @@ npm run dev
 
 ## 🔍 Verification & Health Check
 
-- **API Health Endpoint**:
+The backend provides a dedicated health check route at `/health` (note: the root `/` is not the health check endpoint).
+
+### Production Health Check Endpoint
+- **URL**: `https://meetscribe-ai-production.up.railway.app/health`
+- **Method**: `GET`
+- **Curl Command**:
+  ```bash
+  curl https://meetscribe-ai-production.up.railway.app/health
+  ```
+- **Expected Response**:
+  ```json
+  {"status":"healthy","message":"MeetScribe API is running"}
+  ```
+
+### Local Development Health Check
+- **URL**: `http://localhost:8000/health`
+- **Method**: `GET`
+- **Curl Command**:
   ```bash
   curl http://localhost:8000/health
   ```
-  Expected Response:
+- **Expected Response**:
   ```json
   {
     "status": "healthy",
     "message": "MeetScribe API is running"
   }
   ```
+

@@ -51,5 +51,8 @@ For production environments (Render Disks, Fly.io Volumes, Railway, Docker Volum
 4. On startup, FastAPI's `lifespan` automatically executes `Base.metadata.create_all(bind=engine)` and verifies/seeds default users and initial sample meetings if the database is fresh. All meeting records, transcripts, summaries, and action items will persist permanently across restarts.
 
 ### 5. Health Check & Swagger UI
-- Health: [http://localhost:8000/health](http://localhost:8000/health)
-- Interactive Swagger Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Production Health Endpoint**: [https://meetscribe-ai-production.up.railway.app/health](https://meetscribe-ai-production.up.railway.app/health)
+  - Expected Response: `{"status":"healthy","message":"MeetScribe API is running"}`
+- **Local Health Endpoint**: [http://localhost:8000/health](http://localhost:8000/health) *(Note: the health check is `/health`, not the root `/`)*
+- **Interactive Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+
