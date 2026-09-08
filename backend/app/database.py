@@ -6,44 +6,34 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 # Base Directory definition
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Read DATABASE_URL from environment (e.g., Render PostgreSQL, Neon, Supabase)
-RAW_DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
+# Configurable SQLite database file path (e.g., /data/meetscribe.db on persistent disk mount)
+sqlite_env_path = os.getenv("SQLITE_DB_PATH", "").strip() or os.getenv("DB_PATH", "").strip()
 
-if RAW_DATABASE_URL:
-    # Render, Neon, Supabase, and Heroku often provide postgres:// which SQLAlchemy 1.4+ deprecated
-    if RAW_DATABASE_URL.startswith("postgres://"):
-        SQLALCHEMY_DATABASE_URL = RAW_DATABASE_URL.replace("postgres://", "postgresql://", 1)
-    else:
-        SQLALCHEMY_DATABASE_URL = RAW_DATABASE_URL
+if sqlite_env_path:
+    db_path = Path(sqlite_env_path)
 else:
-    # Default to local SQLite file for development
-    DB_FILE = BASE_DIR / "meetscribe.db"
-    SQLALCHEMY_DATABASE_URL = f"sqlite:///{DB_FILE}"
+    # Default to local ./meetscribe.db inside backend directory
+    db_path = BASE_DIR / "meetscribe.db"
 
-# Engine initialization
-is_sqlite = SQLALCHEMY_DATABASE_URL.startswith("sqlite")
+# Ensure parent directory for persistent SQLite database exists
+db_path.parent.mkdir(parents=True, exist_ok=True)
 
-if is_sqlite:
-    engine = create_engine(
-        SQLALCHEMY_DATABASE_URL,
-        connect_args={"check_same_thread": False},
-    )
+SQLALCHEMY_DATABASE_URL = f"sqlite:///{db_path}"
 
-    # Enable SQLite foreign key constraint enforcement
-    @event.listens_for(engine, "connect")
-    def set_sqlite_pragma(dbapi_connection, connection_record):
-        cursor = dbapi_connection.cursor()
-        cursor.execute("PRAGMA foreign_keys=ON")
-        cursor.close()
-else:
-    # PostgreSQL production pool configuration with SSL pre-ping & connection recycling
-    engine = create_engine(
-        SQLALCHEMY_DATABASE_URL,
-        pool_pre_ping=True,
-        pool_recycle=300,
-        pool_size=10,
-        max_overflow=20,
-    )
+# SQLite Engine configuration with thread safety and foreign keys
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+)
+
+
+@event.listens_for(engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    """Enable SQLite foreign key constraint enforcement."""
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
