@@ -10,6 +10,7 @@ import {
   TranscriptImportRequest,
   TranscriptImportResponse,
   TranscriptSegment,
+  User,
 } from "@/types";
 
 const RAW_API_URL =
@@ -284,3 +285,20 @@ export async function deleteMeeting(
     method: "DELETE",
   });
 }
+
+/**
+ * Fetch all registered users in the workspace.
+ * GET /api/users
+ */
+export async function getUsers(): Promise<User[]> {
+  return apiRequest<User[]>("/api/users");
+}
+
+/**
+ * Fetch user by ID.
+ * GET /api/users/{id}
+ */
+export async function getUser(userId: number): Promise<User> {
+  return apiRequest<User>(`/api/users/${userId}`);
+}
+
