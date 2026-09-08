@@ -48,7 +48,7 @@ export default function DashboardPage() {
     } catch (err) {
       console.error("Dashboard fetch error:", err);
       setError(
-        "Unable to load your meetings. Please make sure the MeetScribe API is running on http://localhost:8000."
+        "Unable to load your meetings. Please ensure the MeetScribe API backend is running and accessible."
       );
     } finally {
       setIsLoading(false);
