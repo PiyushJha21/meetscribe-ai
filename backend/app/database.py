@@ -20,9 +20,13 @@ def get_database_url() -> str:
     db_url = os.getenv("DATABASE_URL", "").strip()
 
     if db_url:
-        # Normalize legacy postgres:// scheme to postgresql:// for SQLAlchemy 2.0
+        # Normalize postgres / psycopg connection schemes to postgresql+psycopg2://
         if db_url.startswith("postgres://"):
-            db_url = db_url.replace("postgres://", "postgresql://", 1)
+            db_url = db_url.replace("postgres://", "postgresql+psycopg2://", 1)
+        elif db_url.startswith("postgresql+psycopg://"):
+            db_url = db_url.replace("postgresql+psycopg://", "postgresql+psycopg2://", 1)
+        elif db_url.startswith("postgresql://"):
+            db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
         return db_url
 
     # Check for individual PostgreSQL environment variables
@@ -36,7 +40,7 @@ def get_database_url() -> str:
         encoded_user = quote_plus(pg_user)
         encoded_pass = quote_plus(pg_password)
         auth_part = f"{encoded_user}:{encoded_pass}@" if pg_password else f"{encoded_user}@"
-        return f"postgresql://{auth_part}{pg_host}:{pg_port}/{pg_db}"
+        return f"postgresql+psycopg2://{auth_part}{pg_host}:{pg_port}/{pg_db}"
 
     # Fallback to SQLite
     sqlite_env_path = os.getenv("SQLITE_DB_PATH", "").strip() or os.getenv("DB_PATH", "").strip()
