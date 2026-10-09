@@ -220,6 +220,7 @@ export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Side: Transcript & Simulated Player (60-65% -> 7 cols on lg) */}
         <div
+          id="tour-transcript-workspace"
           className={`lg:col-span-7 space-y-4 ${
             activeTab === "intelligence" ? "hidden lg:block" : "block"
           }`}
@@ -246,10 +247,12 @@ export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
 
         {/* Right Side: Meeting Intelligence Panel (35-40% -> 5 cols on lg) */}
         <div
+          id="tour-summary-panel"
           className={`lg:col-span-5 space-y-6 ${
             activeTab === "transcript" ? "hidden lg:block" : "block"
           }`}
         >
+
           <MeetingSummaryPanel
             meetingId={meeting.id}
             summary={meeting.summary}

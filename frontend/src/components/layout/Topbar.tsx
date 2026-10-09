@@ -8,8 +8,10 @@ import {
   Calendar,
   CheckSquare,
   Clock,
+  Home,
   Layers,
   Loader2,
+  LogOut,
   Menu,
   Plus,
   Radio,
@@ -17,8 +19,10 @@ import {
   User,
   X,
 } from "lucide-react";
+
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { useAuth } from "@/context/AuthContext";
 import { getAllActionItems, getMeetings } from "@/services/api";
 import { ActionItem, Meeting } from "@/types";
 import { formatDuration } from "@/lib/utils";
@@ -29,8 +33,10 @@ interface TopbarProps {
 
 export const Topbar: React.FC<TopbarProps> = ({ onOpenSidebar }) => {
   const router = useRouter();
+  const { user, logout } = useAuth();
   const [searchVal, setSearchVal] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+
   const [showDropdown, setShowDropdown] = useState(false);
   const [matchingMeetings, setMatchingMeetings] = useState<Meeting[]>([]);
   const [matchingActionItems, setMatchingActionItems] = useState<ActionItem[]>([]);
@@ -261,7 +267,17 @@ export const Topbar: React.FC<TopbarProps> = ({ onOpenSidebar }) => {
       </div>
 
       {/* Right Area: Actions, Notifications, User */}
-      <div className="flex items-center gap-2.5 sm:gap-3.5">
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Home / Back to Home Button */}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[#5925DC] hover:bg-[#6b35e8] border border-[#7A5BF8]/40 rounded-lg shadow-sm shadow-[#5925DC]/30 hover:shadow-[0_0_12px_rgba(89,37,220,0.4)] transition-all cursor-pointer"
+          title="Back to Landing Page"
+        >
+          <Home className="w-3.5 h-3.5 text-white" />
+          <span className="font-medium">Back to Home</span>
+        </Link>
+
         {/* Quick Record Action */}
         <Link href="/new-meeting" className="hidden lg:inline-flex">
           <Button
@@ -283,6 +299,7 @@ export const Topbar: React.FC<TopbarProps> = ({ onOpenSidebar }) => {
             New Meeting
           </Button>
         </Link>
+
 
         {/* Notifications Button */}
         <div className="relative">
@@ -313,23 +330,35 @@ export const Topbar: React.FC<TopbarProps> = ({ onOpenSidebar }) => {
           )}
         </div>
 
-        {/* User Profile Pill */}
-        <Link
-          href="/settings"
-          className="flex items-center gap-2 pl-2 border-l border-[#251357]/80 hover:opacity-90 transition-opacity"
-        >
-          <Avatar name="Piyush Kumar Jha" initials="PJ" size="sm" />
-          <div className="hidden lg:flex flex-col text-left">
-            <span className="text-xs font-semibold text-slate-200 leading-none">
-              Piyush Jha
-            </span>
-            <span className="text-[10px] text-slate-400 leading-none mt-1">
-              Lead Architect
-            </span>
-          </div>
-        </Link>
+        {/* User Profile Pill & Sign Out Action */}
+        <div className="flex items-center gap-2 pl-2 border-l border-[#251357]/80">
+          <Link
+            href="/settings"
+            className="flex items-center gap-2 hover:opacity-90 transition-opacity"
+          >
+            <Avatar name={user?.name || "Piyush Kumar Jha"} initials={user?.name ? user.name.slice(0, 2).toUpperCase() : "PJ"} size="sm" />
+            <div className="hidden lg:flex flex-col text-left">
+              <span className="text-xs font-semibold text-slate-200 leading-none">
+                {user?.name || "Piyush Jha"}
+              </span>
+              <span className="text-[10px] text-purple-300 font-mono leading-none mt-1">
+                {user?.display_id || "USR-IND-001"}
+              </span>
+            </div>
+          </Link>
+          <button
+            type="button"
+            onClick={logout}
+            className="p-1.5 text-slate-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer ml-1"
+            title="Sign Out"
+            aria-label="Sign Out"
+          >
+            <LogOut className="w-4 h-4 text-slate-400 hover:text-rose-400" />
+          </button>
+        </div>
       </div>
     </header>
   );
 };
+
 

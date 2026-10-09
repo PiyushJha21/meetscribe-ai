@@ -286,10 +286,11 @@ export default function NewMeetingPage() {
         </div>
 
         {/* Right Column: Audio Recording / Upload (5 cols) */}
-        <div className="lg:col-span-5 space-y-5">
+        <div id="tour-audio-recorder" className="lg:col-span-5 space-y-5">
           <Card className="p-5 space-y-4 border-[#5925DC]/30 bg-gradient-to-b from-[#5925DC]/15 to-[#160c3d]">
             <div className="flex items-center justify-between pb-2 border-b border-[#251357]/80">
               <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+
                 <FileAudio className="w-4 h-4 text-[#7A5BF8]" />
                 <span>Audio Recording</span>
               </h2>

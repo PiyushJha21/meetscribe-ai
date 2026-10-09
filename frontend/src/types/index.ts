@@ -1,5 +1,3 @@
-// TypeScript Interfaces matching FastAPI backend schemas exactly
-
 export interface User {
   id: number;
   display_id: string;
@@ -8,6 +6,18 @@ export interface User {
   avatar_url?: string | null;
   created_at: string;
 }
+
+export interface AuthResponse {
+  access_token: string;
+  token_type: string;
+  user: User;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
 
 export interface Participant {
   id: number;

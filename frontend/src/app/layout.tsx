@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/layout/AppShell";
+import { AuthProvider } from "@/context/AuthContext";
+import { TourProvider } from "@/context/TourContext";
+import { GuidedTourOverlay } from "@/components/tour/GuidedTourOverlay";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -24,9 +27,13 @@ export default function RootLayout({
         className="min-h-screen bg-[#100730] text-slate-100 font-sans antialiased selection:bg-[#5925DC] selection:text-white"
         suppressHydrationWarning
       >
-        <AppShell>{children}</AppShell>
+        <AuthProvider>
+          <TourProvider>
+            <AppShell>{children}</AppShell>
+            <GuidedTourOverlay />
+          </TourProvider>
+        </AuthProvider>
       </body>
     </html>
   );
 }
-

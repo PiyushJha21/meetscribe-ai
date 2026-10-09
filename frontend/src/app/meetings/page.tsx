@@ -192,18 +192,21 @@ export default function MeetingsPage() {
       </div>
 
       {/* Filter and Search Bar */}
-      <MeetingFilters
-        search={search}
-        onSearchChange={setSearch}
-        workspace={workspace}
-        onWorkspaceChange={setWorkspace}
-        dateFilter={dateFilter}
-        onDateFilterChange={setDateFilter}
-        sortBy={sortBy}
-        onSortChange={setSortBy}
-        onResetFilters={handleResetFilters}
-        hasActiveFilters={hasActiveFilters}
-      />
+      <div id="tour-meeting-filters">
+        <MeetingFilters
+          search={search}
+          onSearchChange={setSearch}
+          workspace={workspace}
+          onWorkspaceChange={setWorkspace}
+          dateFilter={dateFilter}
+          onDateFilterChange={setDateFilter}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+          onResetFilters={handleResetFilters}
+          hasActiveFilters={hasActiveFilters}
+        />
+      </div>
+
 
       {/* Main Content Area */}
       {error ? (

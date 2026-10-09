@@ -444,9 +444,13 @@ SEED_MEETINGS: List[Dict[str, Any]] = [
 def seed_default_users(db: Session) -> List[User]:
     """
     Idempotently seed default workspace users.
-    Ensures Piyush Kumar Jha (owner) and Anshu Kumar exist.
+    Ensures Piyush Kumar Jha (owner) and Anshu Kumar exist with secure credentials.
     """
+    from app.services.auth import DEFAULT_DEMO_PASSWORD, hash_password
+
     seeded_users = []
+    default_hash = hash_password(DEFAULT_DEMO_PASSWORD)
+
     for user_data in SEED_USERS:
         existing = db.query(User).filter(
             (User.email == user_data["email"]) | (User.display_id == user_data["display_id"])
@@ -458,6 +462,7 @@ def seed_default_users(db: Session) -> List[User]:
                 name=user_data["name"],
                 email=user_data["email"],
                 avatar_url=user_data["avatar_url"],
+                password_hash=default_hash,
                 created_at=datetime(2026, 8, 1, 9, 0, 0),
             )
             db.add(user)
@@ -465,11 +470,14 @@ def seed_default_users(db: Session) -> List[User]:
             seeded_users.append(user)
             print(f"✓ Created sample user (ID={user.id}): {user.name} ({user.email})")
         else:
+            if not existing.password_hash:
+                existing.password_hash = default_hash
             seeded_users.append(existing)
             print(f"ℹ Sample user already exists (ID={existing.id}): {existing.name} ({existing.email})")
 
     db.commit()
     return seeded_users
+
 
 
 def seed_database(db: Session) -> Dict[str, Any]:

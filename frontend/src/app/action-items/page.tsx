@@ -300,13 +300,14 @@ export default function ActionItemsPage() {
           className="py-16"
         />
       ) : (
-        <div className="space-y-4">
+        <div id="tour-actions-table" className="space-y-4">
           {/* Action Items Table / Mobile Cards */}
           <ActionItemsTable
             items={paginatedItems}
             onToggleCompletion={handleToggleCompletion}
             togglingId={togglingId}
           />
+
 
           {/* Pagination Controls */}
           <MeetingPagination

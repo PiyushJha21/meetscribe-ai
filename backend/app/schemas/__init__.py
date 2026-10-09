@@ -34,6 +34,7 @@ from app.schemas.transcript import (
     TranscriptSegmentCreate,
     TranscriptSegmentResponse,
 )
+from app.schemas.auth import LoginRequest, LoginResponse
 from app.schemas.user import (
     UserBase,
     UserCreate,
@@ -41,6 +42,8 @@ from app.schemas.user import (
 )
 
 __all__ = [
+    "LoginRequest",
+    "LoginResponse",
     "UserBase",
     "UserCreate",
     "UserResponse",
@@ -67,3 +70,4 @@ __all__ = [
     "MeetingListItem",
     "MeetingDetailResponse",
 ]
+

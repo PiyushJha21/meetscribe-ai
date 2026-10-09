@@ -2,6 +2,8 @@ import {
   ActionItem,
   ActionItemCreate,
   ActionItemUpdate,
+  AuthResponse,
+  LoginCredentials,
   Meeting,
   MeetingCreate,
   MeetingDetail,
@@ -20,7 +22,26 @@ const RAW_API_URL =
 
 export const API_BASE_URL = RAW_API_URL.replace(/\/+$/, "");
 
-class ApiServiceError extends Error {
+export const TOKEN_STORAGE_KEY = "meetscribe_access_token";
+
+export function getStoredToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(TOKEN_STORAGE_KEY);
+}
+
+export function setStoredToken(token: string): void {
+  if (typeof window !== "undefined") {
+    localStorage.setItem(TOKEN_STORAGE_KEY, token);
+  }
+}
+
+export function removeStoredToken(): void {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+  }
+}
+
+export class ApiServiceError extends Error {
   status: number;
   data: unknown;
 
@@ -44,9 +65,16 @@ async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<T
       ...(options?.headers as Record<string, string>),
     };
 
-    if (!isFormData) {
+    if (!isFormData && !headers["Content-Type"]) {
       headers["Content-Type"] = "application/json";
     }
+
+    // Automatically inject Bearer Authorization header if token exists and not already provided
+    const token = getStoredToken();
+    if (token && !headers["Authorization"]) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
 
     const response = await fetch(url, {
       ...options,
@@ -311,5 +339,39 @@ export async function generateMeetingAiInsights(meetingId: number): Promise<Meet
     method: "POST",
   });
 }
+
+/**
+ * Authenticate user with email and password.
+ * POST /api/auth/login
+ */
+export async function loginApi(credentials: LoginCredentials): Promise<AuthResponse> {
+  return apiRequest<AuthResponse>("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify(credentials),
+  });
+}
+
+/**
+ * Fetch current authenticated user session details.
+ * GET /api/auth/me
+ */
+export async function getMeApi(): Promise<User> {
+  return apiRequest<User>("/api/auth/me");
+}
+
+/**
+ * Log out current authenticated user session.
+ * POST /api/auth/logout
+ */
+export async function logoutApi(): Promise<{ status: string; message: string }> {
+  try {
+    return await apiRequest<{ status: string; message: string }>("/api/auth/logout", {
+      method: "POST",
+    });
+  } finally {
+    removeStoredToken();
+  }
+}
+
 
 

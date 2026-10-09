@@ -4,17 +4,108 @@ FastAPI backend service for MeetScribe (Meeting Notes & Transcription Platform).
 
 ## Architecture
 
-- **Framework**: FastAPI
-- **ORM & Database**: SQLAlchemy 2.0 with SQLite (`meetscribe.db`)
-- **Validation**: Pydantic v2
+- **Framework**: FastAPI (Python 3.9+)
+- **Database & ORM**: PostgreSQL (Production) / SQLite (Local Fallback) via SQLAlchemy 2.0
+- **Database Migrations**: Alembic
+- **Driver**: `psycopg2-binary`
+- **Validation**: Pydantic v2 & Pydantic-Settings
 - **Structure**:
-  - `app/main.py`: Application entrypoint, CORS, startup lifespan, and auto-seeding.
-  - `app/database.py`: SQLite engine with configurable `SQLITE_DB_PATH` for persistent disk mounts.
-  - `app/models/`: SQLAlchemy ORM database models.
-  - `app/schemas/`: Pydantic request & response schemas.
-  - `app/routers/`: Modular API route handlers (`/api/meetings`, `/api/users`, `/api/action-items`).
-  - `app/services/`: AI intelligence extraction, summary generation, transcript parsing.
+  - `app/main.py`: Application entrypoint, CORS, startup lifespan, health endpoints (`/health` & `/api/health`).
+  - `app/database.py`: Dynamic database engine resolution with PostgreSQL connection pooling and SQLite fallback.
+  - `app/models/`: SQLAlchemy ORM database models (`User`, `Meeting`, `MeetingParticipant`, `TranscriptSegment`, `MeetingSummary`, `KeyTopic`, `ActionItem`).
+  - `app/schemas/`: Pydantic request & response schemas with attribute mapping.
+  - `app/routers/`: Modular REST API route handlers (`/api/auth`, `/api/meetings`, `/api/users`, `/api/action-items`).
+  - `app/services/`: AI summary extraction, token authentication, and transcript parsing.
+  - `app/migrate_data.py`: CLI tool for migrating data from SQLite to PostgreSQL with sequence synchronization.
   - `app/seed.py`: Idempotent database seeding utility.
+  - `alembic/`: Schema migration version scripts.
+
+---
+
+## Database Configuration & Environment Variables
+
+MeetScribe connects to PostgreSQL via `DATABASE_URL` (or individual PostgreSQL environment variables). If no PostgreSQL connection is provided, it automatically falls back to SQLite for zero-configuration local development.
+
+### Environment Variables
+
+| Variable | Description | Example / Default |
+| :--- | :--- | :--- |
+| `DATABASE_URL` | Full connection URI for PostgreSQL or SQLite | `postgresql://user:password@localhost:5432/meetscribe` |
+| `POSTGRES_HOST` | PostgreSQL host (used if `DATABASE_URL` is unset) | `localhost` |
+| `POSTGRES_PORT` | PostgreSQL port | `5432` |
+| `POSTGRES_DB` | PostgreSQL database name | `meetscribe` |
+| `POSTGRES_USER` | PostgreSQL user | `meetscribe_user` |
+| `POSTGRES_PASSWORD` | PostgreSQL password | `meetscribe_password` |
+| `SQLITE_DB_PATH` | Path for SQLite database fallback | `./meetscribe.db` |
+| `AUTH_SECRET_KEY` | Secret key for signing bearer session tokens | *(Random secure string)* |
+| `TOKEN_EXPIRE_DAYS`| Token expiration in days | `7` |
+| `AUTO_SEED` | Seed sample meetings if database is fresh | `true` |
+| `FRONTEND_URL` | Frontend origin for CORS | `http://localhost:3000` |
+
+Copy the example file to configure your local environment:
+```bash
+cp .env.example .env
+```
+
+---
+
+## Running PostgreSQL with Docker
+
+To start a local PostgreSQL container:
+
+```bash
+docker run -d \
+  --name meetscribe-postgres \
+  -e POSTGRES_DB=meetscribe \
+  -e POSTGRES_USER=meetscribe_user \
+  -e POSTGRES_PASSWORD=meetscribe_password \
+  -p 5432:5432 \
+  postgres:16-alpine
+```
+
+---
+
+## Schema Migrations with Alembic
+
+Run database migrations against PostgreSQL:
+
+```bash
+# Apply all migrations to the latest revision
+DATABASE_URL="postgresql://meetscribe_user:meetscribe_password@localhost:5432/meetscribe" alembic upgrade head
+
+# Generate a new migration after modifying ORM models
+alembic revision --autogenerate -m "describe_changes"
+
+# Rollback one migration step
+alembic downgrade -1
+```
+
+---
+
+## Data Migration: SQLite to PostgreSQL
+
+To export and migrate existing SQLite data (`meetscribe.db`) into PostgreSQL:
+
+```bash
+# Migrate from default SQLite to PostgreSQL
+python -m app.migrate_data \
+  --sqlite-path ./meetscribe.db \
+  --pg-url postgresql://meetscribe_user:meetscribe_password@localhost:5432/meetscribe
+
+# Migrate with target table cleanup
+python app/migrate_data.py \
+  --sqlite-path ./meetscribe.db \
+  --pg-url postgresql://meetscribe_user:meetscribe_password@localhost:5432/meetscribe \
+  --clean
+```
+
+The migration utility:
+1. Copies all 7 models in dependency order (`User` → `Meeting` → `MeetingParticipant` → `TranscriptSegment` → `MeetingSummary` → `KeyTopic` → `ActionItem`).
+2. Preserves existing primary keys and foreign key relationships.
+3. Automatically resynchronizes PostgreSQL auto-increment sequences (`users_id_seq`, `meetings_id_seq`, etc.) to prevent ID collisions on subsequent inserts.
+4. Outputs a verification report comparing source SQLite and target PostgreSQL record counts.
+
+---
 
 ## Getting Started
 
@@ -29,30 +120,25 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. Run the Development Server
+### 3. Run Alembic Migrations
 ```bash
+alembic upgrade head
+```
+
+### 4. Start the Development Server
+```bash
+# With PostgreSQL
+DATABASE_URL="postgresql://meetscribe_user:meetscribe_password@localhost:5432/meetscribe" uvicorn app.main:app --reload --port 8000
+
+# Or with SQLite fallback
 uvicorn app.main:app --reload --port 8000
 ```
 
-### 4. Production Deployment with Persistent Storage
+---
 
-For production environments (Render Disks, Fly.io Volumes, Railway, Docker Volumes):
+## Health Check & API Documentation
 
-1. Attach a persistent disk mount to your service (e.g. at `/data` or `/var/data`).
-2. Set the environment variable:
-   ```bash
-   SQLITE_DB_PATH=/data/meetscribe.db
-   ```
-   *(If not set, it defaults to `./meetscribe.db` in the backend directory).*
-3. (Optional) Set `FRONTEND_URL` to your Vercel frontend URL:
-   ```bash
-   FRONTEND_URL=https://your-app.vercel.app
-   ```
-4. On startup, FastAPI's `lifespan` automatically executes `Base.metadata.create_all(bind=engine)` and verifies/seeds default users and initial sample meetings if the database is fresh. All meeting records, transcripts, summaries, and action items will persist permanently across restarts.
-
-### 5. Health Check & Swagger UI
-- **Production Health Endpoint**: [https://meetscribe-ai-production.up.railway.app/health](https://meetscribe-ai-production.up.railway.app/health)
-  - Expected Response: `{"status":"healthy","message":"MeetScribe API is running"}`
-- **Local Health Endpoint**: [http://localhost:8000/health](http://localhost:8000/health) *(Note: the health check is `/health`, not the root `/`)*
+- **Health Endpoint**: [http://localhost:8000/api/health](http://localhost:8000/api/health) & [http://localhost:8000/health](http://localhost:8000/health)
+  - Returns: `{"status": "healthy", "message": "MeetScribe API is running", "database": "postgresql"}`
 - **Interactive Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-
+- **ReDoc UI**: [http://localhost:8000/redoc](http://localhost:8000/redoc)

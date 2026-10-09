@@ -113,11 +113,10 @@ export const TranscriptPlayer: React.FC<TranscriptPlayerProps> = ({
               <button
                 key={speed}
                 onClick={() => onSpeedChange(speed)}
-                className={`px-1.5 py-0.5 text-[10px] font-mono font-medium rounded transition-colors cursor-pointer ${
-                  playbackSpeed === speed
+                className={`px-1.5 py-0.5 text-[10px] font-mono font-medium rounded transition-colors cursor-pointer ${playbackSpeed === speed
                     ? "bg-[#5925DC] text-white shadow-sm shadow-[#5925DC]/30"
                     : "text-slate-400 hover:text-slate-200"
-                }`}
+                  }`}
               >
                 {speed}x
               </button>

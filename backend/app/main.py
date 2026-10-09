@@ -2,10 +2,11 @@ from contextlib import asynccontextmanager
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import inspect, text
 
 from app.database import Base, SessionLocal, engine
 import app.models  # Ensures all SQLAlchemy models are registered
-from app.routers import action_items_router, meetings_router, users_router
+from app.routers import action_items_router, auth_router, meetings_router, users_router
 from app.seed import seed_database, seed_default_users
 
 
@@ -14,9 +15,17 @@ async def lifespan(app: FastAPI):
     # Ensure all database tables exist on application startup
     Base.metadata.create_all(bind=engine)
 
-    # Ensure default workspace users exist and auto-seed if fresh database
+    # Dialect-agnostic check to ensure all columns exist
     db = SessionLocal()
     try:
+        inspector = inspect(engine)
+        if "users" in inspector.get_table_names():
+            columns = [c["name"] for c in inspector.get_columns("users")]
+            if "password_hash" not in columns:
+                print("Adding missing password_hash column to users table...")
+                db.execute(text("ALTER TABLE users ADD COLUMN password_hash VARCHAR(255)"))
+                db.commit()
+
         from app.models import Meeting
         seed_default_users(db)
 
@@ -59,15 +68,19 @@ app.add_middleware(
 )
 
 # Register API Routers under /api
+app.include_router(auth_router, prefix="/api")
 app.include_router(users_router, prefix="/api")
 app.include_router(meetings_router, prefix="/api")
 app.include_router(action_items_router, prefix="/api")
 
 
 @app.get("/health", tags=["Health"])
+@app.get("/api/health", tags=["Health"])
 async def health_check():
-    """Health check endpoint confirming API status."""
+    """Health check endpoint confirming API status and database dialect."""
+    dialect_name = engine.dialect.name
     return {
         "status": "healthy",
         "message": "MeetScribe API is running",
+        "database": dialect_name,
     }

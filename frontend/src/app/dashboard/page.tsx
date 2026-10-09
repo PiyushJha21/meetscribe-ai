@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Circle,
   Clock,
+  Home,
   Layers,
   ListTodo,
   Plus,
@@ -17,6 +18,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -33,7 +35,7 @@ export default function DashboardPage() {
   const [isRetrying, setIsRetrying] = useState<boolean>(false);
   const [togglingId, setTogglingId] = useState<number | null>(null);
 
-  const fetchDashboardData = useCallback(async () => {
+  const fetchDashboardData = useCallback(async () => { //useCallback prevents a function from being recreated on every render unless its dependencies change.
     setIsLoading(true);
     setError(null);
 
@@ -56,7 +58,7 @@ export default function DashboardPage() {
     }
   }, []);
 
-  useEffect(() => {
+  useEffect(() => { //useEffect is used to handle side effects in React, such as API calls, timers, event listeners, and subscriptions.
     fetchDashboardData();
   }, [fetchDashboardData]);
 
@@ -83,7 +85,7 @@ export default function DashboardPage() {
         prev.map((a) => (a.id === item.id ? { ...a, is_completed: item.is_completed } : a))
       );
     } finally {
-      setTogglingId(null);
+      setTogglingId(null); //setTogglingId is the state setter used to store or update the ID of the item currently undergoing a toggle operation, usually to manage item-specific loading or disabled UI.
     }
   };
 
@@ -100,75 +102,96 @@ export default function DashboardPage() {
   const recentMeetings = meetings.slice(0, 3);
   const pendingActions = actionItems.filter((i) => !i.is_completed).slice(0, 5);
 
-  // ----------------------------------------------------
   // Error State
-  // ----------------------------------------------------
+
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 space-y-5">
-        <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400">
-          <AlertCircle className="w-8 h-8" />
+      <div className="space-y-6">
+        <div className="flex items-center justify-between pb-3 border-b border-[#251357]/60"> {/*Padding bottom*/}
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#5925DC] hover:bg-[#6b35e8] border border-[#7A5BF8]/40 rounded-lg shadow-sm shadow-[#5925DC]/30 transition-all cursor-pointer"
+          >
+            <Home className="w-4 h-4 text-white" />
+            <span>Back to Home</span>
+          </Link>
         </div>
-        <div className="max-w-md space-y-1.5">
-          <h2 className="text-lg font-bold text-white tracking-tight">
-            Unable to load your workspace
-          </h2>
-          <p className="text-xs text-slate-400 leading-relaxed">{error}</p>
+        <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-6 space-y-5">
+          <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400">
+            <AlertCircle className="w-8 h-8" />
+          </div>
+          <div className="max-w-md space-y-1.5">
+            <h2 className="text-lg font-bold text-white tracking-tight">
+              Unable to load your workspace
+            </h2>
+            <p className="text-xs text-slate-400 leading-relaxed">{error}</p>
+          </div>
+          <Button
+            variant="secondary"
+            size="md"
+            icon={<RefreshCw className={`w-4 h-4 ${isRetrying ? "animate-spin" : ""}`} />}
+            onClick={handleRetry}
+            disabled={isRetrying}
+          >
+            {isRetrying ? "Reconnecting..." : "Retry Connection"}
+          </Button>
         </div>
-        <Button
-          variant="secondary"
-          size="md"
-          icon={<RefreshCw className={`w-4 h-4 ${isRetrying ? "animate-spin" : ""}`} />}
-          onClick={handleRetry}
-          disabled={isRetrying}
-        >
-          {isRetrying ? "Reconnecting..." : "Retry Connection"}
-        </Button>
       </div>
     );
   }
 
   // ----------------------------------------------------
-  // Loading Skeletons
+  // Loading Skeletons : /* Í˛Wzß */A skeleton is a temporary UI placeholder shown while the actual content is loading.
   // ----------------------------------------------------
   if (isLoading) {
     return (
-      <div className="space-y-8 animate-pulse">
-        {/* Banner Skeleton */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-2">
-            <div className="h-7 w-64 bg-[#160c3d] rounded-lg" />
-            <div className="h-4 w-80 bg-[#160c3d]/60 rounded" />
-          </div>
-          <div className="flex gap-3">
-            <div className="h-9 w-28 bg-[#160c3d] rounded-lg" />
-            <div className="h-9 w-32 bg-[#160c3d] rounded-lg" />
-          </div>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between pb-3 border-b border-[#251357]/60">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#5925DC] hover:bg-[#6b35e8] border border-[#7A5BF8]/40 rounded-lg shadow-sm shadow-[#5925DC]/30 transition-all cursor-pointer"
+          >
+            <Home className="w-4 h-4 text-white" />
+            <span>Back to Home</span>
+          </Link>
         </div>
+        <div className="space-y-8 animate-pulse">
+          {/* Banner Skeleton */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-2">
+              <div className="h-7 w-64 bg-[#160c3d] rounded-lg" />
+              <div className="h-4 w-80 bg-[#160c3d]/60 rounded" />
+            </div>
+            <div className="flex gap-3">
+              <div className="h-9 w-28 bg-[#160c3d] rounded-lg" />
+              <div className="h-9 w-32 bg-[#160c3d] rounded-lg" />
+            </div>
+          </div>
 
-        {/* Metric Cards Skeleton */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="space-y-3">
-              <div className="flex justify-between items-start">
-                <div className="space-y-2 w-full">
-                  <div className="h-3.5 w-24 bg-[#140a38] rounded" />
-                  <div className="h-8 w-16 bg-[#140a38] rounded-lg" />
-                  <div className="h-3 w-28 bg-[#140a38]/60 rounded" />
-                </div>
-                <div className="w-10 h-10 bg-[#140a38] rounded-xl" />
-              </div>
-            </Card>
-          ))}
-        </div>
-
-        {/* Recent Meetings Skeleton */}
-        <div className="space-y-4">
-          <div className="h-5 w-44 bg-[#160c3d] rounded" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Metric Cards Skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => (
-              <Card key={i} className="h-44 bg-[#160c3d]/60" />
+              <Card key={i} className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-2 w-full">
+                    <div className="h-3.5 w-24 bg-[#140a38] rounded" />
+                    <div className="h-8 w-16 bg-[#140a38] rounded-lg" />
+                    <div className="h-3 w-28 bg-[#140a38]/60 rounded" />
+                  </div>
+                  <div className="w-10 h-10 bg-[#140a38] rounded-xl" />
+                </div>
+              </Card>
             ))}
+          </div>
+
+          {/* Recent Meetings Skeleton */}
+          <div className="space-y-4">
+            <div className="h-5 w-44 bg-[#160c3d] rounded" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[1, 2, 3].map((i) => (
+                <Card key={i} className="h-44 bg-[#160c3d]/60" />
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -181,7 +204,7 @@ export default function DashboardPage() {
   const stats = [
     {
       label: "Total Meetings",
-      value: totalMeetings.toString(),
+      value: totalMeetings.toString(),   //totalMeetings.toString() = convert the number of meetings into text so it can be displayed.
       description: "Indexed across workspaces",
       icon: Calendar,
       variant: "indigo" as const,
@@ -203,7 +226,24 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      {/* Top Header Navigation Bar: Back to Home */}
+      <div className="flex items-center justify-between p-3 rounded-xl bg-[#160c3d]/90 border border-[#2b1764] shadow-md shadow-black/20 backdrop-blur-md">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#5925DC] hover:bg-[#6b35e8] border border-[#7A5BF8]/40 rounded-lg shadow-sm shadow-[#5925DC]/30 hover:shadow-[0_0_16px_rgba(89,37,220,0.4)] transition-all cursor-pointer group"
+          title="Back to Landing Page"
+        >
+          <Home className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
+          <span>Back to Home</span>
+        </Link>
+        <div className="flex items-center gap-2 text-xs text-slate-400">
+          <span className="hidden sm:inline text-slate-400">Workspace</span>
+          <span className="hidden sm:inline text-slate-600">/</span>
+          <span className="text-purple-300 font-medium">Dashboard</span>
+        </div>
+      </div>
+
       {/* Welcome Hero Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#251357]/80">
         <div>
@@ -222,6 +262,15 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Link href="/">
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Home className="w-3.5 h-3.5 text-[#7A5BF8]" />}
+            >
+              Home
+            </Button>
+          </Link>
           <Link href="/new-meeting">
             <Button
               variant="outline"
@@ -243,12 +292,14 @@ export default function DashboardPage() {
         </div>
       </div>
 
+
       {/* Overview Metric Stats from Real Backend Data */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div id="tour-metrics-strip" className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {stats.map((stat, idx) => {
           const Icon = stat.icon;
           return (
             <Card key={idx} className="relative overflow-hidden group hover:border-[#5925DC]/50 transition-colors">
+
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-xs font-medium text-slate-400">

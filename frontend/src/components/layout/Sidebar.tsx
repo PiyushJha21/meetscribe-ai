@@ -11,10 +11,13 @@ import {
   FolderKanban,
   Home,
   Layers,
+  LayoutDashboard,
+  LogOut,
   Settings,
   X,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
+import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 
 interface SidebarProps {
@@ -24,9 +27,11 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
 
   const mainNavItems = [
-    { label: "Dashboard", href: "/dashboard", icon: Home },
+    { label: "Back to Home", href: "/", icon: Home },
+    { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { label: "Meetings", href: "/meetings", icon: Calendar },
     { label: "Action Items", href: "/action-items", icon: CheckSquare },
   ];
@@ -36,6 +41,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { label: "Product & Design", count: 2 },
     { label: "Client Reviews", count: 2 },
   ];
+
+  const handleSignOut = async () => {
+    if (onClose) onClose();
+    await logout();
+  };
+
+  const userName = user?.name || "Piyush Kumar Jha";
+  const userEmail = user?.email || "piyush.jha@syncspace.in";
+  const userDisplayId = user?.display_id || "USR-IND-001";
+  const initials = userName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() || "PJ";
 
   return (
     <>
@@ -58,7 +78,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         {/* Brand Header */}
         <div className="flex items-center justify-between h-16 px-5 border-b border-[#251357]/80">
           <Link href="/dashboard" className="flex items-center gap-2.5 group">
-            {/* Original MeetScribe Logo Icon */}
             <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-[#5925DC] to-[#7A5BF8] text-white shadow-md shadow-[#5925DC]/30 group-hover:scale-105 transition-transform">
               <AudioLines className="w-4 h-4 text-white" />
             </div>
@@ -76,7 +95,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           {onClose && (
             <button
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-white rounded-md hover:bg-[#160c3d] md:hidden"
+              className="p-1.5 text-slate-400 hover:text-white rounded-md hover:bg-[#160c3d] md:hidden cursor-pointer"
               aria-label="Close sidebar"
             >
               <X className="w-5 h-5" />
@@ -128,7 +147,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             {workspaceChannels.map((channel, idx) => (
               <Link
                 key={idx}
-                href={`/meetings`}
+                href="/meetings"
                 onClick={onClose}
                 className="flex items-center justify-between px-3 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-[#160c3d]/90 rounded-lg cursor-pointer transition-colors group"
               >
@@ -144,7 +163,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </div>
         </div>
 
-        {/* Bottom User Profile Section */}
+        {/* Bottom User Profile Section with Sign Out Button */}
         <div className="p-3 border-t border-[#251357]/80 bg-[#0d0526]/90 space-y-2">
           <Link
             href="/settings"
@@ -160,25 +179,33 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <span>Settings</span>
           </Link>
 
-          <div className="flex items-center gap-3 p-2 rounded-xl bg-[#160c3d] border border-[#2b1764]">
-            <Avatar name="Piyush Kumar Jha" initials="PJ" size="sm" />
-            <div className="flex flex-col min-w-0 flex-1">
-              <div className="flex items-center justify-between">
+          <div className="p-2.5 rounded-xl bg-[#160c3d] border border-[#2b1764] space-y-2">
+            <div className="flex items-center gap-2.5">
+              <Avatar name={userName} initials={initials} size="sm" />
+              <div className="flex flex-col min-w-0 flex-1">
                 <span className="text-xs font-semibold text-white truncate">
-                  Piyush Kumar Jha
+                  {userName}
+                </span>
+                <span className="text-[10px] text-purple-300 font-mono">
+                  {userDisplayId}
+                </span>
+                <span className="text-[10px] text-slate-400 truncate">
+                  {userEmail}
                 </span>
               </div>
-              <span className="text-[10px] text-purple-300 font-mono">
-                USR-IND-001
-              </span>
-              <span className="text-[10px] text-slate-400 truncate">
-                piyush.jha@syncspace.in
-              </span>
             </div>
+
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="w-full mt-1 py-1.5 px-2.5 text-[11px] font-semibold text-rose-300 hover:text-white bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5 text-rose-400" />
+              <span>Sign Out</span>
+            </button>
           </div>
         </div>
       </aside>
     </>
   );
 };
-
